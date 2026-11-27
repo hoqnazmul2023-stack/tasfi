@@ -1770,7 +1770,7 @@ void main(){
   vec2 uv = frag / u_res;
   float aspect = u_res.x / max(u_res.y, 1.0);
   vec2 p = vec2(uv.x*aspect, uv.y);
-  float t = u_time*1.8;
+  float t = u_time*1.15;
 
   vec2 q = vec2(
     fbm3(p*0.85 + vec2(0.0, t*0.022)),
@@ -1793,11 +1793,11 @@ void main(){
   lum = pow(lum, 1.15);
 
   vec3 col = mix(u_colC, u_colA, lum);
-  col = mix(col, u_colB, clamp((q.y - 0.338)/0.21, 0.0, 1.0)*0.40*clamp((lum - 0.25)/0.65, 0.0, 1.0));
-  col = mix(col, u_colD, clamp((room - 0.534)/0.13*1.1 + 0.10, 0.0, 1.0)*0.42);
-  col += u_colB*pow(max((field - 0.50)/0.146, 0.0), 2.0)*0.11;
+  col = mix(col, u_colB, clamp((q.y - 0.338)/0.21, 0.0, 1.0)*0.30*clamp((lum - 0.25)/0.65, 0.0, 1.0));
+  col = mix(col, u_colD, clamp((room - 0.534)/0.13*1.1 + 0.10, 0.0, 1.0)*0.16);
+  col += u_colB*pow(max((field - 0.50)/0.146, 0.0), 2.0)*0.09;
 
-  col = hueShift(col, u_hue + (room - 0.534)/0.13*0.055);
+  col = hueShift(col, u_hue + (room - 0.534)/0.13*0.018);
   float l = dot(col, vec3(0.2126, 0.7152, 0.0722));
   col = mix(vec3(l), col, u_sat);
   col = (col - 0.5)*u_contrast + 0.5;
@@ -1886,7 +1886,7 @@ void main(){
     ];
   }
   function stepColors(dt){
-    const kc = 1 - Math.exp(-dt/3.5);
+    const kc = 1 - Math.exp(-dt/6);
     curA = mix3(curA, tgtA, kc);
     curB = mix3(curB, tgtB, kc);
     curC = mix3(curC, tgtC, kc);
@@ -1952,7 +1952,7 @@ void main(){
     const C = [curC[0]/255, curC[1]/255, curC[2]/255];
     const D = [curD[0]/255, curD[1]/255, curD[2]/255];
     const hue = drift.hue.v, sat = 1 + drift.sat.v, con = 1 + drift.contrast.v, gain = 1 + drift.gain.v;
-    const t = tsec*1.8;
+    const t = tsec*1.15;
     const dth = fract2(t)*17.17;
     let i = 0;
     for (let y = 0; y < FH; y++){
@@ -1980,15 +1980,15 @@ void main(){
         let b0 = C[2] + (A[2] - C[2])*lum;
         let m = (qy - 0.338)/0.21; m = m < 0 ? 0 : (m > 1 ? 1 : m);
         let mk = (lum - 0.25)/0.65; mk = mk < 0 ? 0 : (mk > 1 ? 1 : mk);
-        m = m*0.40*mk;
+        m = m*0.30*mk;
         r0 += (B[0] - r0)*m; g0 += (B[1] - g0)*m; b0 += (B[2] - b0)*m;
         let m2v = (room - 0.534)/0.13*1.1 + 0.10; m2v = m2v < 0 ? 0 : (m2v > 1 ? 1 : m2v);
-        m2v *= 0.42;
+        m2v *= 0.16;
         r0 += (D[0] - r0)*m2v; g0 += (D[1] - g0)*m2v; b0 += (D[2] - b0)*m2v;
         let fd = (field - 0.50)/0.146; if (fd < 0) fd = 0;
-        fd = fd*fd*0.11;
+        fd = fd*fd*0.09;
         r0 += B[0]*fd; g0 += B[1]*fd; b0 += B[2]*fd;
-        const col = rotHue([r0, g0, b0], hue + (room - 0.534)/0.13*0.055);
+        const col = rotHue([r0, g0, b0], hue + (room - 0.534)/0.13*0.018);
         const l = 0.2126*col[0] + 0.7152*col[1] + 0.0722*col[2];
         const ex = Math.min(uvx, 1 - uvx);
         let e = ex < ey ? ex : ey;
@@ -2073,10 +2073,10 @@ void main(){
     img.src = src;
   }
   function retarget(){
-    drift.gain.t = (Math.random()*2 - 1)*0.07;
+    drift.gain.t = (Math.random()*2 - 1)*0.06;
     drift.contrast.t = (Math.random()*2 - 1)*0.06;
-    drift.sat.t = (Math.random()*2 - 1)*0.20;
-    drift.hue.t = (Math.random()*2 - 1)*0.026;
+    drift.sat.t = (Math.random()*2 - 1)*0.16;
+    drift.hue.t = (Math.random()*2 - 1)*0.015;
   }
   function stepDrift(dt){
     for (const k in drift){
