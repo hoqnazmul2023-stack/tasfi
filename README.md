@@ -5,8 +5,8 @@ sans build, sans dépendance npm. Page d'entrée : `index.html`.
 
 ## Architecture
 
-- `index.html` — page unique (styles et scripts inline, sectionnés par `id`).
-- `assets/` — médias statiques (pochette utilisée par l'ambiance lumineuse).
+- `index.html` — page unique autonome (styles, scripts et pochette encodée en base64 inline, sectionnés par `id`).
+- `assets/` — médias statiques (source d'origine de la pochette utilisée par l'ambiance).
 
 ## Fond dynamique « Orion Atmosphere »
 
@@ -16,8 +16,9 @@ surface de couleur continue, sans formes visibles, qui évolue lentement.
 - Rendu WebGL (`<canvas id="orion-atmosphere">`, script `orion-atmosphere-script`) :
   bruit FBM à distorsion de domaine, évolution non répétitive (procédé
   Ornstein–Uhlenbeck par canal : luminosité, contraste, saturation, teinte).
-- Palette extraite des couleurs dominantes de `assets/album-darkside.png`
-  (méta `<meta name="orion-atmosphere-source">`), avec repli sur la couleur du
+- Palette extraite des couleurs dominantes de la pochette, encodée inline dans
+  `index.html` (`window.ORION_ATMOSPHERE_SOURCE`) ou référencée via la méta
+  `<meta name="orion-atmosphere-source">`, avec repli sur la couleur du
   thème (`orion:brandchange`).
 - Le logo hérite de la couleur ambiante via les variables CSS `--atm-rgb`
   et `--atm-hi-rgb`, mises à jour depuis le rendu.
