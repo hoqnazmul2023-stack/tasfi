@@ -24,11 +24,15 @@ tout le reste, dont l'ambiance, fonctionne hors ligne.
 ## Fond dynamique « Orion Atmosphere »
 
 Fond ambiant plein écran inspiré des lecteurs musicaux plein écran : une seule
-surface de couleur continue, sans formes visibles, qui évolue lentement.
+surface de couleur continue, sans formes visibles, qui évolue lentement avec de
+nettes nuances de couleur entre les régions (zones plus claires, plus sombres ou
+tirant vers une teinte voisine, sans aucune forme identifiable).
 
 - Rendu WebGL (`<canvas id="orion-atmosphere">`, script `orion-atmosphere-script`) :
-  bruit FBM à distorsion de domaine, évolution non répétitive (procédé
-  Ornstein–Uhlenbeck par canal : luminosité, contraste, saturation, teinte).
+  bruit FBM à distorsion de domaine, dérive spatiale de teinte liée à la
+  « lumière de la pièce », évolution non répétitive (procédé
+  Ornstein–Uhlenbeck par canal : luminosité, contraste, saturation, teinte),
+  quatre couleurs de palette interpolées en douceur (`u_colA`…`u_colD`).
 - Palette extraite des couleurs dominantes de la pochette, encodée inline dans
   `index.html` (`window.ORION_ATMOSPHERE_SOURCE`) ou référencée via la méta
   `<meta name="orion-atmosphere-source">`, avec repli sur la couleur du

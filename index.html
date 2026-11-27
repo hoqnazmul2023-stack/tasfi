@@ -1718,6 +1718,7 @@ uniform float u_time;
 uniform vec3 u_colA;
 uniform vec3 u_colB;
 uniform vec3 u_colC;
+uniform vec3 u_colD;
 uniform float u_gain;
 uniform float u_contrast;
 uniform float u_hue;
@@ -1765,30 +1766,31 @@ void main(){
   float t = u_time;
 
   vec2 q = vec2(
-    fbm3(p*0.85 + vec2(0.0, t*0.021)),
-    fbm3(p*0.85 + vec2(5.2,1.3) - t*0.0163)
+    fbm3(p*0.85 + vec2(0.0, t*0.022)),
+    fbm3(p*0.85 + vec2(5.2,1.3) - t*0.017)
   );
   vec2 r = vec2(
-    fbm4(p*1.15 + 2.4*q + vec2(1.7 + t*0.0121, 9.2)),
-    fbm4(p*1.15 + 2.2*q + vec2(8.3, 2.8 - t*0.0179))
+    fbm4(p*1.15 + 2.4*q + vec2(1.7 + t*0.013, 9.2)),
+    fbm4(p*1.15 + 2.2*q + vec2(8.3, 2.8 - t*0.019))
   );
 
   float field = fbm4(p*1.02 + 2.1*r);
-  float room  = fbm3(p*0.48 + 1.5*r + vec2(t*0.0052, -t*0.0041));
+  float room  = fbm3(p*0.48 + 1.5*r + vec2(t*0.0055, -t*0.0044));
 
   float depth = field*0.68 + room*0.62;
   vec2 lc = vec2(0.5*aspect, 0.52) + (r - 0.5)*0.62;
   float pool = exp(-dot(p - lc, p - lc)*0.50);
 
-  float lum = clamp(depth*0.52 + 0.16 + pool*0.34, 0.0, 1.0);
+  float lum = clamp((depth - 0.44)*1.55 + pool*0.38, 0.0, 1.0);
   lum = lum*lum*(3.0 - 2.0*lum);
-  lum = pow(lum, 1.12);
+  lum = pow(lum, 1.15);
 
   vec3 col = mix(u_colC, u_colA, lum);
-  col = mix(col, u_colB, clamp(q.y - 0.35, 0.0, 0.65)*0.30*smoothstep(0.35, 0.95, lum));
-  col += u_colB*pow(max(field - 0.52, 0.0)*1.9, 2.0)*0.085;
+  col = mix(col, u_colB, clamp((q.y - 0.338)/0.21, 0.0, 1.0)*0.40*clamp((lum - 0.25)/0.65, 0.0, 1.0));
+  col = mix(col, u_colD, clamp((room - 0.534)/0.13*1.1 + 0.10, 0.0, 1.0)*0.42);
+  col += u_colB*pow(max((field - 0.50)/0.146, 0.0), 2.0)*0.11;
 
-  col = hueShift(col, u_hue);
+  col = hueShift(col, u_hue + (room - 0.534)/0.13*0.055);
   float l = dot(col, vec3(0.2126, 0.7152, 0.0722));
   col = mix(vec3(l), col, u_sat);
   col = (col - 0.5)*u_contrast + 0.5;
@@ -1812,7 +1814,8 @@ void main(){
   let emaDt=16, perfWindow=0, checked=false;
 
   let colA=[25,105,98], colB=[46,140,120], colC=[8,22,26];
-  let tgtA=colA.slice(), tgtB=colB.slice(), tgtC=colC.slice();
+  let tgtA=colA.slice(), tgtB=colB.slice(), tgtC=colC.slice(), tgtD=colA.slice();
+  let curA=tgtA.slice(), curB=tgtB.slice(), curC=tgtC.slice(), curD=tgtD.slice();
 
   const drift = { gain:{v:0,t:0}, contrast:{v:0,t:0}, sat:{v:0,t:0}, hue:{v:0,t:0} };
   let nextDriftAt = 0, nextRetargetAt = 0, nextSampleAt = 0, nextCssAt = 0;
@@ -1841,7 +1844,7 @@ void main(){
     const loc = gl.getAttribLocation(prog, 'a_pos');
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    ['u_res','u_time','u_colA','u_colB','u_colC','u_gain','u_contrast','u_hue','u_sat','u_seed'].forEach(n => uni[n] = gl.getUniformLocation(prog, n));
+    ['u_res','u_time','u_colA','u_colB','u_colC','u_colD','u_gain','u_contrast','u_hue','u_sat','u_seed'].forEach(n => uni[n] = gl.getUniformLocation(prog, n));
     gl.uniform1f(uni.u_seed, Math.random()*90 + 10);
     inited = true;
   }
@@ -1853,6 +1856,22 @@ void main(){
     canvas.style.width = w+'px'; canvas.style.height = h+'px';
     if (gl) gl.viewport(0, 0, bw, bh);
   }
+  function rotHue(c, h){
+    const kk = 0.57735, ang = 6.28318*h, ca = Math.cos(ang), sa = Math.sin(ang), om = 1 - ca;
+    const d = (c[0] + c[1] + c[2])/3*om;
+    return [
+      c[0]*ca + kk*(c[2] - c[1])*sa + d,
+      c[1]*ca + kk*(c[0] - c[2])*sa + d,
+      c[2]*ca + kk*(c[1] - c[0])*sa + d
+    ];
+  }
+  function stepColors(dt){
+    const kc = 1 - Math.exp(-dt/3.5);
+    curA = mix3(curA, tgtA, kc);
+    curB = mix3(curB, tgtB, kc);
+    curC = mix3(curC, tgtC, kc);
+    curD = mix3(curD, tgtD, kc);
+  }
   function setPaletteFromRgb(rgb, keepFamily){
     if (!rgb) return;
     const lum = 0.2126*rgb[0] + 0.7152*rgb[1] + 0.0722*rgb[2];
@@ -1860,8 +1879,9 @@ void main(){
     const sat = 1.35;
     const vivid = rgb.map(v => clamp(lum + (v - lum)*sat, 0, 255));
     tgtA = vivid.map(v => Math.round(clamp(v*0.80*k, 6, 205)));
-    tgtC = tgtA.map(v => Math.round(clamp(v*0.32, 2, 70)));
-    tgtB = mix3(vivid, [255,255,255], 0.38).map(v => Math.round(clamp(v*0.80*k, 8, 215)));
+    tgtC = tgtA.map(v => Math.round(clamp(v*0.22, 2, 58)));
+    tgtB = vivid.map(v => Math.round(clamp((v*0.55 + 255*0.45)*0.82*k, 8, 220)));
+    tgtD = rotHue(tgtA, 0.075).map(v => Math.round(clamp(v, 4, 210)));
     if (keepFamily) return;
   }
   function setImage(src){
@@ -1925,7 +1945,7 @@ void main(){
   function stepDrift(dt){
     for (const k in drift){
       const ch = drift[k];
-      ch.v += (ch.t - ch.v)*(1 - Math.exp(-dt/7));
+      ch.v += (ch.t - ch.v)*(1 - Math.exp(-dt/5));
       ch.v += (Math.random()*2 - 1)*0.012*dt;
       ch.v = clamp(ch.v, -0.5, 0.5);
     }
@@ -1965,9 +1985,10 @@ void main(){
     const tsec = acc/1000;
     gl.uniform2f(uni.u_res, bw, bh);
     gl.uniform1f(uni.u_time, tsec);
-    gl.uniform3f(uni.u_colA, tgtA[0]/255, tgtA[1]/255, tgtA[2]/255);
-    gl.uniform3f(uni.u_colB, tgtB[0]/255, tgtB[1]/255, tgtB[2]/255);
-    gl.uniform3f(uni.u_colC, tgtC[0]/255, tgtC[1]/255, tgtC[2]/255);
+    gl.uniform3f(uni.u_colA, curA[0]/255, curA[1]/255, curA[2]/255);
+    gl.uniform3f(uni.u_colB, curB[0]/255, curB[1]/255, curB[2]/255);
+    gl.uniform3f(uni.u_colC, curC[0]/255, curC[1]/255, curC[2]/255);
+    gl.uniform3f(uni.u_colD, curD[0]/255, curD[1]/255, curD[2]/255);
     gl.uniform1f(uni.u_gain, 1 + drift.gain.v);
     gl.uniform1f(uni.u_contrast, 1 + drift.contrast.v);
     gl.uniform1f(uni.u_hue, drift.hue.v);
@@ -1986,8 +2007,9 @@ void main(){
     if (proceed){
       lastDraw = now;
       stepDrift(dt/1000);
+      stepColors(dt/1000);
       if (fallback){ stop(); return; }
-      if (now > nextRetargetAt){ retarget(); nextRetargetAt = now + 5000 + Math.random()*7000; }
+      if (now > nextRetargetAt){ retarget(); nextRetargetAt = now + 4000 + Math.random()*5000; }
       draw(now);
       if (now > nextCssAt){ pushCss(); nextCssAt = now + 160; }
       emaDt = emaDt*0.94 + dt*0.06;
