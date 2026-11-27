@@ -3,6 +3,19 @@
 Site one-page d'Orion AI (assistant IA, Control Panel, Orion Core) : HTML autonome,
 sans build, sans dépendance npm. Page d'entrée : `index.html`.
 
+## Ouvrir le site directement
+
+Aucun serveur ni installation n'est nécessaire :
+
+1. Téléchargez le dépôt : bouton **Code → Download ZIP** (ou récupérez `index.html` seul).
+2. Décompressez le dossier où vous voulez.
+3. Double-cliquez sur `index.html` — le site et le fond ambiant fonctionnent
+   immédiatement dans le navigateur (la pochette est encodée dans le fichier,
+   l'ambiance ne dépend donc d'aucun fichier externe).
+
+Sans internet, seuls la police et le visualiseur 3D (CDN) sont ignorés ;
+tout le reste, dont l'ambiance, fonctionne hors ligne.
+
 ## Architecture
 
 - `index.html` — page unique autonome (styles, scripts et pochette encodée en base64 inline, sectionnés par `id`).
