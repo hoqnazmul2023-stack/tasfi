@@ -33,13 +33,18 @@ tirant vers une teinte voisine, sans aucune forme identifiable).
   « lumière de la pièce », évolution non répétitive (procédé
   Ornstein–Uhlenbeck par canal : luminosité, contraste, saturation, teinte),
   quatre couleurs de palette interpolées en douceur (`u_colA`…`u_colD`).
-- Palette extraite des couleurs dominantes de la pochette, encodée inline dans
-  `index.html` (`window.ORION_ATMOSPHERE_SOURCE`) ou référencée via la méta
-  `<meta name="orion-atmosphere-source">`, avec repli sur la couleur du
-  thème (`orion:brandchange`).
+- Palette prioritairement synchronisée sur la couleur vivante du site
+  (`orion:brandchange`, transition douce d'environ 3,5 s, sans saut de
+  couleur) ; la pochette encodée inline dans `index.html`
+  (`window.ORION_ATMOSPHERE_SOURCE`) ou référencée via la méta
+  `<meta name="orion-atmosphere-source">` ne sert que de palette de départ
+  si aucun moteur de marque n'est présent.
 - Le logo hérite de la couleur ambiante via les variables CSS `--atm-rgb`
   et `--atm-hi-rgb`, mises à jour depuis le rendu.
 - Qualité : `window.OrionAtmosphere.setQuality('high' | 'balanced' | 'lite' | 'off')`,
   adaptation automatique aux appareils (`html.lowfx`, `html.ultra-lite`,
-  `prefers-reduced-motion`), repli dégradé CSS si WebGL indisponible.
+  `prefers-reduced-motion`). Si WebGL est indisponible ou échoue, repli
+  automatique sur un rendu Canvas 2D animé (même champ, basse résolution
+  lissée à l'écran) ; un dégradé CSS statique n'intervient qu'en dernier
+  ressort.
 - Autres API : `setColor(hex)`, `setImage(url)`, `getAmbientColor()`.
